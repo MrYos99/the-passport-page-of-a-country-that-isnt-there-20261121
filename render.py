@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Build the Tavara passport spread (1024x720 PNG) from a portrait file.
+"""Build the Amartha passport spread (1024x720 PNG) from a portrait file.
 
-Country: Republic of Tavara, an island republic in the Indian Ocean.
-Capital Port Lumara. Holder Lani Maru Veke, marine biologist.
-All dates are internally consistent: passport issued 12 MAR 2024,
-every stamp falls after that date, in chronological order.
+Country: Kingdom of Amartha, an underground kingdom of the hollow
+earth, capital Shamballa. A fictional dystopia; every emblem and
+symbol here is invented for this document, none is a real insignia.
+Holder Ingrid Solberg (or Erik Halvorsen), a cartographer of the
+Inner Reaches. All dates are internally consistent: passport issued
+05 MAY 2024, every stamp falls after that date, in chronological
+order.
 """
 import math
 import sys
@@ -14,13 +17,29 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1024, 720
 CREAM = (246, 241, 227)
-PAGE = (250, 246, 236)
-INK = (26, 38, 38)
-TEAL = (15, 90, 92)
-TEAL_DARK = (14, 58, 59)
-GOLD = (176, 138, 46)
+PAGE = (239, 237, 230)
+INK = (30, 36, 42)
+TEAL = (32, 44, 56)
+TEAL_DARK = (26, 32, 40)
+GOLD = (176, 126, 30)
+AMBER = (150, 110, 30)
 GREY = (110, 108, 96)
-LIGHT_BAND = (237, 230, 210)
+LIGHT_BAND = (228, 224, 212)
+
+HOLDERS = {
+    "a": {
+        "surname": "SOLBERG", "given": "INGRID", "sex": "F",
+        "dob": "14 FEB 1988", "dob_mrz": "880214",
+        "doc": "AM7304519", "height": "1.74 m", "eyes": "GREY",
+        "signature": "Ingrid Solberg", "house": "House Solberg",
+    },
+    "b": {
+        "surname": "HALVORSEN", "given": "ERIK", "sex": "M",
+        "dob": "03 OCT 1984", "dob_mrz": "841003",
+        "doc": "AM7304520", "height": "1.86 m", "eyes": "GREY-BLUE",
+        "signature": "Erik Halvorsen", "house": "House Halvorsen",
+    },
+}
 
 FONT_PATHS = {
     "serif_b": [
@@ -73,18 +92,19 @@ def check_digit(s):
     return str(total % 10)
 
 
-def mrz_lines():
-    line1 = "P<TAVVEKE<<LANI<MARU"
+def mrz_lines(holder):
+    line1 = "P<AMR" + holder["surname"] + "<<" + holder["given"] + "<"
     line1 = line1 + "<" * (44 - len(line1))
-    doc = "TV4829167"
+    doc = holder["doc"]
     cd1 = check_digit(doc)
-    dob = "900608"
+    dob = holder["dob_mrz"]
     cd2 = check_digit(dob)
-    exp = "340311"
+    exp = "340504"
     cd3 = check_digit(exp)
     personal = "<" * 14
     cd4 = check_digit(personal)
-    body = doc + cd1 + "TAV" + dob + cd2 + "F" + exp + cd3 + personal + cd4
+    body = (doc + cd1 + "AMR" + dob + cd2 + holder["sex"] + exp + cd3
+            + personal + cd4)
     cd5 = check_digit(body)
     line2 = body + cd5
     assert len(line1) == 44 and len(line2) == 44, (len(line1), len(line2))
@@ -108,24 +128,21 @@ def wrap(draw, text, fnt, max_w):
 
 
 def draw_emblem(draw, cx, cy, r):
+    # Hollow-earth roundel, invented for Amartha: the shell of the
+    # earth as two rings, with the inner sun at the centre.
     draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=GOLD, width=2)
     draw.ellipse([cx - r + 4, cy - r + 4, cx + r - 4, cy + r - 4],
                  outline=TEAL, width=1)
-    # frigate bird: two arcs
-    draw.arc([cx - 13, cy - 12, cx + 1, cy + 2], 200, 340, fill=TEAL, width=2)
-    draw.arc([cx - 1, cy - 12, cx + 13, cy + 2], 200, 340, fill=TEAL, width=2)
-    # three waves
-    for i, yy in enumerate((cy + 6, cy + 11, cy + 16)):
-        draw.arc([cx - 14, yy - 4, cx - 2, yy + 4], 0, 180, fill=TEAL, width=2)
-        draw.arc([cx + 2, yy - 4, cx + 14, yy + 4], 0, 180, fill=TEAL, width=2)
-    # small star above the bird
-    sx, sy = cx, cy - 16
-    pts = []
-    for i in range(10):
-        ang = -math.pi / 2 + i * math.pi / 5
-        rr = 4 if i % 2 == 0 else 2
-        pts.append((sx + rr * math.cos(ang), sy + rr * math.sin(ang)))
-    draw.polygon(pts, fill=GOLD)
+    draw.ellipse([cx - 9, cy - 9, cx + 9, cy + 9], outline=TEAL, width=1)
+    # inner sun: disc with eight short rays
+    draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], fill=AMBER)
+    for i in range(8):
+        ang = i * math.pi / 4
+        x1 = cx + 6 * math.cos(ang)
+        y1 = cy + 6 * math.sin(ang)
+        x2 = cx + 10 * math.cos(ang)
+        y2 = cy + 10 * math.sin(ang)
+        draw.line([x1, y1, x2, y2], fill=AMBER, width=1)
 
 
 def guilloche(base):
@@ -135,7 +152,7 @@ def guilloche(base):
         pts = []
         for x in range(0, W + 8, 8):
             pts.append((x, y0 + 5 * math.sin(x / 55.0 + y0)))
-        d.line(pts, fill=(15, 90, 92, 14), width=1)
+        d.line(pts, fill=(30, 40, 50, 14), width=1)
     return Image.alpha_composite(base, layer)
 
 
@@ -162,7 +179,8 @@ def stamp(draw_layer, box, kind, place, date, colour, angle):
     draw_layer.alpha_composite(rot, (box[0] - 20, box[1] - 20))
 
 
-def build(portrait_path, out_path):
+def build(portrait_path, out_path, holder_key="a"):
+    holder = HOLDERS[holder_key]
     img = Image.new("RGBA", (W, H), TEAL_DARK + (255,))
     draw = ImageDraw.Draw(img)
     # outer cover edge
@@ -180,17 +198,17 @@ def build(portrait_path, out_path):
 
     # ---------- LEFT PAGE: data page ----------
     draw_emblem(draw, 261, 52, 24)
-    draw.text((261, 82), "REPUBLIC OF TAVARA", font=font("serif_b", 21),
+    draw.text((261, 82), "KINGDOM OF AMARTHA", font=font("serif_b", 21),
               fill=INK, anchor="ma")
-    draw.text((261, 106), "REPUBLIK TAVARA", font=font("sans", 9),
+    draw.text((261, 106), "INNER EARTH  •  SHAMBALLA", font=font("sans", 9),
               fill=GREY, anchor="ma")
     draw.line([40, 122, 482, 122], fill=GOLD, width=2)
     draw.line([40, 126, 482, 126], fill=GOLD, width=1)
 
     # type / code / number row
     y = 138
-    for label, value, x in (("Type", "P", 40), ("Code", "TAV", 120),
-                            ("Passport No.", "TV4829167", 220)):
+    for label, value, x in (("Type", "P", 40), ("Code", "AMR", 120),
+                            ("Passport No.", holder["doc"], 220)):
         draw.text((x, y), label.upper(), font=font("sans", 8), fill=GREY)
         draw.text((x, y + 11), value, font=font("sans_b", 14), fill=INK)
     draw.text((482, y + 11), "PASSPORT", font=font("sans_b", 12),
@@ -218,28 +236,28 @@ def build(portrait_path, out_path):
     sx, sy = 168, 344
     seal = Image.new("RGBA", (80, 80), (0, 0, 0, 0))
     sd = ImageDraw.Draw(seal)
-    sd.ellipse([6, 6, 74, 74], outline=(107, 63, 160, 220), width=2)
-    sd.ellipse([11, 11, 69, 69], outline=(107, 63, 160, 180), width=1)
-    sd.text((40, 24), "PORT", font=font("sans_b", 8),
-            fill=(107, 63, 160, 230), anchor="ma")
-    sd.text((40, 35), "LUMARA", font=font("sans_b", 8),
-            fill=(107, 63, 160, 230), anchor="ma")
-    sd.text((40, 48), "12 MAR 2024", font=font("sans", 6),
-            fill=(107, 63, 160, 230), anchor="ma")
+    sd.ellipse([6, 6, 74, 74], outline=(150, 110, 30, 220), width=2)
+    sd.ellipse([11, 11, 69, 69], outline=(150, 110, 30, 180), width=1)
+    sd.text((40, 24), "AMARTHA", font=font("sans_b", 8),
+            fill=(150, 110, 30, 230), anchor="ma")
+    sd.text((40, 36), "SHAMBALLA", font=font("sans_b", 7),
+            fill=(150, 110, 30, 230), anchor="ma")
+    sd.text((40, 48), "05 MAY 2024", font=font("sans", 6),
+            fill=(150, 110, 30, 230), anchor="ma")
     img.alpha_composite(seal, (sx - 40, sy - 40))
     draw = ImageDraw.Draw(img)
 
     # data fields, right of the photo
     fields = [
-        ("Surname", "VEKE"),
-        ("Given names", "LANI MARU"),
-        ("Nationality", "TAVARAN"),
-        ("Date of birth", "08 JUN 1990"),
-        ("Sex", "F"),
-        ("Place of birth", "PORT LUMARA"),
-        ("Date of issue", "12 MAR 2024"),
-        ("Date of expiry", "11 MAR 2034"),
-        ("Authority", "PASSPORT OFFICE, PORT LUMARA"),
+        ("Surname", holder["surname"]),
+        ("Given names", holder["given"]),
+        ("Nationality", "AMARTHAN"),
+        ("Date of birth", holder["dob"]),
+        ("Sex", holder["sex"]),
+        ("Place of birth", "SHAMBALLA"),
+        ("Date of issue", "05 MAY 2024"),
+        ("Date of expiry", "04 MAY 2034"),
+        ("Authority", "PASSPORT OFFICE, SHAMBALLA"),
     ]
     fy = 168
     for label, value in fields:
@@ -250,33 +268,34 @@ def build(portrait_path, out_path):
     fy += 2
     draw.line([208, fy, 482, fy], fill=(200, 192, 168), width=1)
     fy += 8
-    for label, value, x in (("Height", "1.68 m", 208),
-                            ("Eyes", "BROWN", 300),
-                            ("Profession", "MARINE BIOLOGIST", 372)):
+    for label, value, x in (("Height", holder["height"], 208),
+                            ("Eyes", holder["eyes"], 300),
+                            ("Profession", "CARTOGRAPHER", 372)):
         draw.text((x, fy), label, font=font("sans", 8), fill=GREY)
         draw.text((x, fy + 10), value, font=font("sans_b", 10), fill=INK)
 
     # signature
     sy2 = 452
     draw.line([40, sy2, 260, sy2], fill=INK, width=1)
-    draw.text((52, sy2 - 30), "Lani Maru Veke", font=font("serif_i", 20),
+    draw.text((52, sy2 - 30), holder["signature"], font=font("serif_i", 20),
               fill=(40, 60, 90))
     draw.text((40, sy2 + 6), "Signature of holder", font=font("sans", 8),
               fill=GREY)
-    draw.text((300, sy2 + 6), "This passport is the property of\nthe Republic of Tavara.",
+    draw.text((300, sy2 + 6), "This passport is the property of\nthe Kingdom of Amartha.",
               font=font("serif_i", 10), fill=GREY)
 
     # remarks box, fills the gap above the MRZ and ties holder to the place
     draw.rectangle([40, 498, 482, 546], outline=(190, 180, 150), width=1)
     draw.text((52, 506), "REMARKS", font=font("sans_b", 8), fill=GREY)
     draw.text((52, 520),
-              "Holder serves with the Tavara Reef Survey. Renew at Port Lumara.",
+              "Holder maps the Inner Reaches. Lineage verified, "
+              + holder["house"] + ".",
               font=font("sans", 10), fill=INK)
 
     # MRZ band
     draw.rectangle([28, 560, 494, 690], fill=LIGHT_BAND + (255,))
     draw.rectangle([28, 560, 494, 690], outline=(190, 180, 150), width=1)
-    l1, l2 = mrz_lines()
+    l1, l2 = mrz_lines(holder)
     draw.text((261, 578), l1, font=font("mono", 15), fill=INK, anchor="ma")
     draw.text((261, 606), l2, font=font("mono", 15), fill=INK, anchor="ma")
     draw.text((261, 640), "Machine readable zone  •  Hold this page flat at the border",
@@ -291,14 +310,14 @@ def build(portrait_path, out_path):
     draw.line([540, 78, 984, 78], fill=GOLD, width=2)
 
     stamps = [
-        ("DEPARTURE", "PORT LUMARA, TAVARA", "02 APR 2024", (31, 78, 156), -4),
-        ("ARRIVAL", "COLOMBO, SRI LANKA", "03 APR 2024", (107, 63, 160), 3),
-        ("DEPARTURE", "COLOMBO, SRI LANKA", "18 APR 2024", (107, 63, 160), -2),
-        ("ARRIVAL", "MALE, MALDIVES", "19 APR 2024", (30, 122, 76), 4),
-        ("DEPARTURE", "MALE, MALDIVES", "27 APR 2024", (30, 122, 76), -3),
-        ("ARRIVAL", "PORT LUMARA, TAVARA", "28 APR 2024", (31, 78, 156), 2),
-        ("ARRIVAL", "COCHIN, INDIA", "14 SEP 2025", (138, 59, 46), -4),
-        ("DEPARTURE", "COCHIN, INDIA", "29 SEP 2025", (138, 59, 46), 3),
+        ("DEPARTURE", "SHAMBALLA, AMARTHA", "21 JUN 2024", (150, 110, 30), -4),
+        ("ARRIVAL", "TELOS", "22 JUN 2024", (107, 63, 160), 3),
+        ("DEPARTURE", "TELOS", "30 JUN 2024", (107, 63, 160), -2),
+        ("ARRIVAL", "REYKJAVIK, ICELAND", "01 JUL 2024", (31, 78, 156), 4),
+        ("DEPARTURE", "REYKJAVIK, ICELAND", "12 JUL 2024", (31, 78, 156), -3),
+        ("ARRIVAL", "SHAMBALLA, AMARTHA", "13 JUL 2024", (150, 110, 30), 2),
+        ("ARRIVAL", "TROMSO, NORWAY", "09 MAR 2025", (138, 59, 46), -4),
+        ("DEPARTURE", "TROMSO, NORWAY", "21 MAR 2025", (138, 59, 46), 3),
     ]
     gx, gy = 540, 96
     for i, (kind, place, date, colour, angle) in enumerate(stamps):
@@ -306,28 +325,29 @@ def build(portrait_path, out_path):
         cy = gy + (i // 2) * 92
         stamp(img, (cx, cy), kind, place, date, colour, angle)
 
-    # Reef Levy box: the telling paperwork detail
+    # Daylight Permit box: the telling paperwork detail
     by = 480
     draw.rectangle([540, by, 984, 640], outline=TEAL, width=2)
     draw.rectangle([540, by, 984, by + 28], fill=TEAL + (255,))
-    draw.text((552, by + 6), "REEF LEVY  •  PAID 12 TV", font=font("sans_b", 12),
+    draw.text((552, by + 6), "DAYLIGHT PERMIT", font=font("sans_b", 12),
               fill=(255, 255, 255))
-    draw.text((972, by + 6), "RL-2024-1187", font=font("sans", 10),
+    draw.text((972, by + 6), "No. DP-2024-0773", font=font("sans", 10),
               fill=(255, 255, 255), anchor="ra")
-    body = ("CONDITION 7: This passport is valid for travel only with a "
-            "current Reef Levy receipt. Coral, shells and sand must not be "
-            "removed from Tavara. Fine 500 TV.")
+    body = ("CONDITION 9: This passport is valid below 800 metres. Travel "
+            "to the surface requires a current Daylight Permit. Direct "
+            "sunlight beyond 6 hours requires medical clearance. "
+            "Fine 400 lumen.")
     lines = wrap(draw, body, font("sans", 11), 420)
     ly = by + 38
     for ln in lines:
         draw.text((552, ly), ln, font=font("sans", 11), fill=INK)
         ly += 17
-    draw.text((552, 616), "Paid at Port Lumara  •  12 MAR 2024",
+    draw.text((552, 616), "Issued at Shamballa  •  05 MAY 2024",
               font=font("sans", 9), fill=GREY)
 
     draw.text((540, 664), "Page 12 — visas and entry stamps only.",
               font=font("sans", 8), fill=GREY)
-    draw.text((984, 664), "TAV", font=font("sans_b", 9), fill=TEAL,
+    draw.text((984, 664), "AMR", font=font("sans_b", 9), fill=TEAL,
               anchor="ra")
 
     img.convert("RGB").save(out_path, "PNG", optimize=True)
@@ -337,5 +357,6 @@ def build(portrait_path, out_path):
 if __name__ == "__main__":
     portrait = sys.argv[1]
     out = sys.argv[2]
-    build(portrait, out)
+    holder_key = sys.argv[3] if len(sys.argv) > 3 else "a"
+    build(portrait, out, holder_key)
     print(out)

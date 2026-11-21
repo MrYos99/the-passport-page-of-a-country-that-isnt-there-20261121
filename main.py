@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Write the Tavara passport spread to /output/entry.png.
+"""Write the Amartha passport spread to /output/entry.png.
 
 The spread is drawn by render.py in this repository (Pillow): it lays
-out the data page and the visas page of a passport from the Republic
-of Tavara, an island republic in the Indian Ocean that does not exist,
-and pastes in the portrait from assets/portrait.jpg, a portrait made
-by an image model in the session that built this entry. The finished
-spread is stored as assets/entry.png, and this program writes those
-exact bytes to the output path, after checking the gate limits.
+out the data page and the visas page of a passport from the Kingdom
+of Amartha, an underground kingdom of the hollow earth that does not
+exist, and pastes in the portrait from assets/portrait.jpg, a portrait
+made by an image model in the session that built this entry. The
+finished spread is stored as assets/entry.png, and this program writes
+those exact bytes to the output path, after checking the gate limits.
 
 The program uses the standard library only and is deterministic:
 every run writes the same bytes.
