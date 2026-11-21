@@ -4,10 +4,10 @@
 Country: Kingdom of Amartha, an underground kingdom of the hollow
 earth, capital Shamballa. A fictional dystopia; every emblem and
 symbol here is invented for this document, none is a real insignia.
-Holder Ingrid Solberg (or Erik Halvorsen, or George Fenthnyl), a
-cartographer of the Inner Reaches. All dates are internally
-consistent: passport issued 05 MAY 2024, every stamp falls after
-that date, in chronological order.
+Holder Ingrid Solberg (or Erik Halvorsen), a cartographer of the
+Inner Reaches. All dates are internally consistent: passport issued
+05 MAY 2024, every stamp falls after that date, in chronological
+order.
 """
 import math
 import sys
@@ -38,13 +38,6 @@ HOLDERS = {
         "dob": "03 OCT 1984", "dob_mrz": "841003",
         "doc": "AM7304520", "height": "1.86 m", "eyes": "GREY-BLUE",
         "signature": "Erik Halvorsen", "house": "House Halvorsen",
-    },
-    "c": {
-        "surname": "FENTHNYL", "given": "GEORGE", "sex": "M",
-        "dob": "12 JUN 1990", "dob_mrz": "900612",
-        "doc": "AM7304521", "height": "1.82 m", "eyes": "BROWN",
-        "signature": "George Fenthnyl", "house": None,
-        "remarks": "Holder maps the Inner Reaches. Daylight Permit current.",
     },
 }
 
@@ -294,10 +287,9 @@ def build(portrait_path, out_path, holder_key="a"):
     # remarks box, fills the gap above the MRZ and ties holder to the place
     draw.rectangle([40, 498, 482, 546], outline=(190, 180, 150), width=1)
     draw.text((52, 506), "REMARKS", font=font("sans_b", 8), fill=GREY)
-    remarks = holder.get("remarks") or (
-        "Holder maps the Inner Reaches. Lineage verified, "
-        + holder["house"] + ".")
-    draw.text((52, 520), remarks,
+    draw.text((52, 520),
+              "Holder maps the Inner Reaches. Lineage verified, "
+              + holder["house"] + ".",
               font=font("sans", 10), fill=INK)
 
     # MRZ band
